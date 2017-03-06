@@ -13,50 +13,186 @@ output:
     fig_height: 4
     code_folding: show
 ---
+
 # Introduction
 
-# Research questions
+In this report, I describe how I used principal component analysis (PCA) and multiple correspondence analysis (MCA) to investigate the relationships of features or variables in a survey dataset. The dataset concerns the use of online platforms (defined as social media services, internt search engines and online marketplaces) and the attitudes towards the collection and use of the users' data by these platfroms.
+
+First, I describe the dataset used for the analysis. The original data was from an eurobarometer survey, and included a large number of variables that were not used for this analysis. Making the data suitable for PCA and MCA required considerable data wrangling.
+
+Next, I perform PCA on the data and analyze its results. PCA was used to explore the relationships between the numerical variables of the analysis dataset.
+
+Third, I perform MCA on the data and analyxe its results. The motivation to use also MCA was to make it possible to do comparisons between categorical variables in the dataset (in particular, nationalities). How this can be done is demonstrated by comparing Finns and Swedes. 
 
 # Data
 
-Data wrangling for this final project is done in a separate R script, which can be found here: 
+I use the dataset from Eurobarometer 85.1. This Eurobarometer survey included several topics, I am mainly interested in the part that concerns the use of online platforms. Descriptive statistics of this part are availble at http://ec.europa.eu/information_society/newsroom/image/document/2016-24/ebs_447_en_16136.pdf. The dataset is available through GESIS (requires login) at https://dbk.gesis.org/dbksearch/sdesc2.asp?no=6693&db=e&doi=10.4232/1.12591. The questionnaire is at https://dbk.gesis.org/dbksearch/download.asp?db=E&id=60519. Due to potential licensing issues, I do not include the dataset in my github repository.
+
+For my analysis, I use the majority of the above-mentione online platforms questionnaire. I have excluded four survey items that focused on online search results, and one item that focused on rating systems of online marketplaces. I will describe the variables in the analysis part of this report.
+
+Data wrangling is done in a separate R script, which can be found here: https://github.com/tlehtiniemi/IODS-final/blob/master/eurobarometer_data.R In the data wrangling script, I have filtered the results so that
+
+* only users of internet are included
+* only users of online platfroms are included
+* observations that included spontaneous responses were excluded (this invcluded e.g. respondents who initially said they use the internet, but later on spontaneously claimed they did not)
+* observations that included "don't know" responses for some questions were also filtered out.
+
+This left me with 9500 (exactly!) observations of 22 variables in the analysis dataset.
 
 ```{r}
-eurob_test = read.csv("/Users/lehtint9/IODS-final/eurob_data.csv", sep=",", header=TRUE)
+eurob_data = read.csv("/Users/lehtint9/IODS-final/eurob_data.csv", sep=",", header=TRUE)
 ```
-
-Describe data, variables
-
-The data wrnagling itself is done in a separate file
 
 # Analysis
 
+The following libraries are used
+
+```{r message=FALSE}
 library(FactoMineR)
+library(dplyr)
+```
 
-## PCA
+## Principal component analysis
 
-# Principal component analysis
+PCA transforms the dataset into a new space. The dimensions of this new space are called the principal components of data. The first principal component captures the maximum amount of variance from the features of original data. Each suggessive principal component is orthogonal to the first (and other) components, and captures the maximum amount of variance left.
 
-# eurob_pca_data$comfort_socialmedia <- eurob_filtered$qd5_1
-# eurob_pca_data$comfort_search <- eurob_filtered$qd5_2
-# eurob_pca_data$comfort_marketplace <- eurob_filtered$qd5_3
+For principal component analysis, I will make use of the following items of the dataset:
+
+* `search`: How often uses search engines <em>(scale: 1 everyday or almost every day ... 5 less often)</em>
+* `socialmedia`: How often uses online social networks  <em>(scale: 1 everyday or almost every day ... 5 less often)</em>
+* `termsconditions`: Do you read read terms & conditions of online platforms? <em>(scale: 1 usually read and take into account ... 3 usually do not read)</em> 
+* `behavior` The order in which search results are displayed by online platforms has an effect on your behaviour as a consumer <em>(scale 1 completely agree ... 4 completely disagree)</em>
+* `interest` You expect online platforms to present search results in an order that corresponds best to what interests you <em>(scale 1 completely agree ... 4 completely disagree)</em>
+* `commercial` Online platforms should be able to change the order in which they display search results to suit their own commercial interests <em>(scale 1 completely agree ... 4 completely disagree)</em>
+* `awareness` You are aware that the Internet experience (what you see on the Internet) can be different for each user based on their prior online activities <em>(scale 1 completely agree ... 4 completely disagree)</em>
+* `concern` You are concerned about the data collected about you on the Internet <em>(scale 1 completely agree ... 4 completely disagree)</em>
+* `regulation` Online platforms should be regulated by public authorities to limit the extent to which they display different search results to users based on the data collected about them <em>(scale 1 completely agree ... 4 completely disagree)</em>
+* `comfort` (summary variableof three similar items) To what extent are you comfortable or not with the fact that search engines, online social networks, and online marketplaces use information about your online activity and personal data to tailor advertisements or content to what interests you? <em>(scale 1 very comfortable ... 4 very uncomfortable)</em>
+* `age` The age of the respondent
+
+It is notable that the "directions"" of the questions affect their interpretations, and this should be kept in mind in the analysis part.
+
+Choose these variables from the dataset and print out the structure report and summary of the dataset
+
+```{r}
+pca_keep <- c("search", "socialmedia", "termsconditions", "age", "behavior", "interest", "commercial", "awareness", "concern", "regulation", "comfort")
+eurob_pca_data <- select(eurob_data, one_of(pca_keep))
+str(eurob_pca_data)
+```
+
+Let's see a report of the correlations between these variables.
+
+```{r message=FALSE}
+library(corrplot)
+cor(eurob_pca_data) %>% corrplot.mixed()
+```
+
+We see that some correlations between the variables stand out. It is notable that all of these correlations are rather low. 
+
+* `concern` and `regulation` have the highest positive correlation. This means that respondents who agreed they had concerns about data collection in the internet tended to support regulation of online platforms by authorities.  
+* `socialmedia` and `search` had a high positive correlation also. This means that same users use (or do not use) both social networking platforms and search services regularly.
+* among other interesting observations, `behavior`was somewhat correlated with both `interest` and `commercial`. This means that respondent who agree that the order in which search results are displayed by online platforms has an effect on your behaviour as a consumer, tend to agree that
+    + online platforms present search results in an order that corresponds best to what interests you; and that
+    + online platforms should be able to change the order in which they display search results to suit their own commercial interests
+* concern and comfort have the highest negative correlation. This means that those who agreed they had concerns about data collection in the internet were not comfortable with those data being used to tailor advertisement and content for them by online platforms. 
+
+Next, the summary of the dataset
+
+```{r}
+summary(eurob_pca_data)
+```
+
+These variables have different scales and variances. PCA assumes that variance indicates the importance of a variable. If we perform PCA on this dataset, we will end up describing mainly the age of the respondent (as it describe the majority of variance in the dataset). It is therefore necessary to scale the variables before running the PCA analysis. Nex I do this, run the PCA and print out the model summary do this 
+
+```{r}
 eurob_pca_data_std <- scale(eurob_pca_data)
-
 eurob_pca <- prcomp(eurob_pca_data_std)
 summary(eurob_pca)
+```
 
+The first two principal components of the data describe about 33% of the variance of the data. Let's print out a biplot of the PCA model to help interpreting it.
+
+```{r}
 biplot(eurob_pca, choices = 1:2, cex=c(0.5, 1), col = c("grey40", "deeppink2"))
+```
 
+The interpretation of the biplot arrows is that a low angle between two arrows indicates that these features "pull in the same direction", that is, have a positive correlation. The angle between an arrow and an axis represents correlation between the original feature and the principal component in question.
 
-## MCA
+Now, from the biplot we interpret that there are three groups of features:
 
-mca_columns <- c("internetuse", "termsconditions", "behavior", "interest", "commercial", "awareness", "concern", "regulation", "comfort", "country")
-eurob_mca_data <- select(eurob_mca_data, one_of(c(mca_columns)))
+* `concern`, `regulation` and `termsconditions` form the first group
+* `awareness`, `commercial`, `behavior` and `interest` form the second group
+* `age`, `search` and `socialmedia` form a third group
+* `comfort` forms a fourth group of its own
 
-eurob_mca_data <- filter(eurob_mca_data, country == "FINLAND" | country == "SWEDEN" | country == "ROMANIA")
+Principal component PC1 is almost equal to experienced comfort, and is also correlated with the first group above. PC1, then, describes HIGH experienced comfort with data use practices, and is correlated with LOW concern about data use, LOW demands for regulation of online platforms and NOT reading terms and conditions (bearing in mind the "direction" of coding of agreement and the formulation of the questions listed above).
 
+PC2 is highly correlated with the second group listed above. It describes LOW awareness of data collection practices, LOW expectations of effects on behavior, and LOW expectations of commercial interests having effect on search results online (bearing in mind the "direction" of coding of agreement and the formulation of the questions listed above).
+
+Interpretation-wise, these results make intuitive sense. 
+
+## Multiple correspondence analysis
+
+To explore the data a bit more, in addition to performing PCA on the data, I also wanted to include a categorical variable representing the nationality of the respondent and see with dimensionality reduction techniques if some differences could be found between two particular nationalities, that is, Sweden and Finland.
+
+I will do perform this analysis using multiple correspondence analysis, or MCA. The rationale for using this method is that unlike PCA, it is capable of handling categorical variables. While most of the variables used above can be interpreted as categorical, the interpretation of MCA results with several categories that are close to each other (such as "completely agree" and "somewhat agree") would be difficult.
+
+Therefore, I have transformed the variables to mainly two categories: e.g. "completely agree" and "somewhat agree" are combined into "agree"; a two-category version of comfort is formed in a similar manner; a two-category version of reading terms and conditions also ("mostly read" and "mostly do not read""). In addition, the following categorical (factor) variables are also included:
+
+* `F_nationality` is a factor variable with 29 levels: 28 EU countries plus "other countries"
+* `F_internetuse` is a factor variable with 2 levels: heavy_user and light_user
+
+Choose these variables from the dataset and print out the structure report of the dataset
+
+```{r}
+mca_keep <- c("F_internetuse", "F_termsconditions", "F_behavior", "F_interest", "F_commercial", "F_awareness", "F_concern", "F_regulation", "F_comfort", "F_nationality")
+eurob_mca_data <- select(eurob_data, one_of(mca_keep))
+str(eurob_mca_data)
+```
+
+As indicated by the nationality variable, the dataset includes data on all the EU nationalities:
+
+```{r}
+ftable(eurob_mca_data$F_nationality)
+```
+
+Let's just keep the data from Finland (366 observations) and Sweden (559 observations).
+
+```{r}
+eurob_mca_data <- filter(eurob_mca_data, F_nationality == "FINLAND" | F_nationality == "SWEDEN")
+```
+
+Next I'll perform MCA on the data and print out the model summary
+
+```{r}
+library(FactoMineR)
 eurob_mca <- MCA(eurob_mca_data, graph = FALSE)
-#summary(eurob_mca)
+summary(eurob_mca)
+```
 
+The first two dimensions describe some 30 % of the variance of the data.
+
+To aid in interpretation, let's print out the biplot of the model
+```{r}
 plot(eurob_mca, invisible=c("ind"), habillage = "quali")
+```
 
+Since the relationships between the variables overall were already described in the PCA analysis part of this report, I will only briefly comment on the overall results here. Most polar opposited of the categories are spread out on both dimensions, so that intuitive interpretation of the dimensions is not clear.
+
+Interestingly, light platfrom use seems to be close to reading terms and conditions and is also associated with disagreeing that commercial interest should be allowed to affect search results. Conversely, heavy use is associated with not reading terms and conditions and agreeing on the commercial interests. Agreement on authorities regulating how collected data is used to display search results is associated with concern on the use of collected data, and with uncomfortability with how the collecetd data is used to tailor advertisements and content.
+
+These results make intuitive sense and are rather easily interpretable.
+
+Perhaps the more interesting part in the MCA biplot is, what can be said about Finland and Sweden in particular. In the biplot, Finnish nationality is closely asosciated with <em>disagreement</em> with the following claims:
+
+* You are aware that the Internet experience (what you see on the Internet) can be different for each user based on their prior online activities (variable `F_awareness`)
+* You expect online platforms to present search results in an order that corresponds best to what interests you (variable `F_interest`)
+* The order in which search results are displayed by online platforms has an effect on your behaviour as a consumer (variable `F_behavior`)
+
+Swedish nationality is associated with
+
+* Agreement with the claims `F_behavior` and `F_interest` that Finns disagreed with
+* Agreement that online platforms should be regulated (variable `F_regulation`)
+* Also quite close association with being heavy internet users
+
+Therefore, we were able to find some differences between Finns and Swedes with this data. Finns seemed to be less knowledgeable of how collected data is used, but also more sceptical about the benefits of platforms and towards the possibilities of behavioral modification by the internet platfroms. Swedes seemed to be more described by agreeability towards regulation of online platfroms.

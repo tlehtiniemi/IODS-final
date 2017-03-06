@@ -7,7 +7,7 @@ library(dplyr)
 
 # I use the dataset of Eurobarometer survey 85.1.
 # This data (like other Eurobarometer data) is published in SPSS formats.
-# Eurobarometer datasets are available at GESIS, see http://www.gesis.org/eurobarometer-data-service/search-data-access/data-access/
+# Eurobarometer datasets are available at GESIS, see http://dx.doi.org/10.4232/1.12591
 # I opened the data in SPSS and exported it as a CSV file.
 # This CSV file is then read into R.
 eurob_all = read.csv("/Users/lehtint9/IODS-final/eurob_85_1_all_data.csv",sep=",",header=TRUE)

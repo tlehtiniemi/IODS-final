@@ -122,7 +122,7 @@ summary(eurob_pca)
 
 The first two principal components of the data describe about 33% of the variance of the data. Let's print out a biplot of the PCA model to help interpreting it.
 
-```{r}
+```{r fig.width=8, fig.height=8}
 biplot(eurob_pca, choices = 1:2, cex=c(0.5, 1), col = c("grey40", "deeppink2"))
 ```
 
@@ -182,7 +182,7 @@ summary(eurob_mca)
 The first two dimensions describe some 30 % of the variance of the data.
 
 To aid in interpretation, let's print out the biplot of the model
-```{r}
+```{r fig.width=8, fig.height=8}
 plot(eurob_mca, invisible=c("ind"), habillage = "quali")
 ```
 

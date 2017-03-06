@@ -1,0 +1,62 @@
+---
+title: "IODS final project"
+author: "Tuukka Lehtiniemi"
+date: "6 March 2017"
+output:
+  html_document:
+    theme: spacelab
+    toc: true
+    toc_float: true
+    toc_depth: 2
+    fig_caption: true
+    fig_width: 6
+    fig_height: 4
+    code_folding: show
+---
+# Introduction
+
+# Research questions
+
+# Data
+
+Data wrangling for this final project is done in a separate R script, which can be found here: 
+
+```{r}
+eurob_test = read.csv("/Users/lehtint9/IODS-final/eurob_data.csv", sep=",", header=TRUE)
+```
+
+Describe data, variables
+
+The data wrnagling itself is done in a separate file
+
+# Analysis
+
+library(FactoMineR)
+
+## PCA
+
+# Principal component analysis
+
+# eurob_pca_data$comfort_socialmedia <- eurob_filtered$qd5_1
+# eurob_pca_data$comfort_search <- eurob_filtered$qd5_2
+# eurob_pca_data$comfort_marketplace <- eurob_filtered$qd5_3
+eurob_pca_data_std <- scale(eurob_pca_data)
+
+eurob_pca <- prcomp(eurob_pca_data_std)
+summary(eurob_pca)
+
+biplot(eurob_pca, choices = 1:2, cex=c(0.5, 1), col = c("grey40", "deeppink2"))
+
+
+## MCA
+
+mca_columns <- c("internetuse", "termsconditions", "behavior", "interest", "commercial", "awareness", "concern", "regulation", "comfort", "country")
+eurob_mca_data <- select(eurob_mca_data, one_of(c(mca_columns)))
+
+eurob_mca_data <- filter(eurob_mca_data, country == "FINLAND" | country == "SWEDEN" | country == "ROMANIA")
+
+eurob_mca <- MCA(eurob_mca_data, graph = FALSE)
+#summary(eurob_mca)
+
+plot(eurob_mca, invisible=c("ind"), habillage = "quali")
+
